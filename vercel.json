@@ -1,5 +1,4 @@
 {
   "framework": null,
-  "buildCommand": "mkdir -p public && cp -r frontend/* public/",
   "outputDirectory": "public"
 }
