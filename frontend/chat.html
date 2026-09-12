@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invisible Banker - Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── CSS Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --bg-page:        #eef3fb;
+      --bg-card:        #ffffff;
+      --bg-card-hover:  #ffffff;
+      --bg-header:      rgba(255,255,255,0.25);
+      --border-card:    rgba(200,215,240,0.7);
+      --text-primary:   #1a2340;
+      --text-secondary: #5a6a8a;
+      --text-muted:     #8fa0bb;
+      --accent-blue:    #2563eb;
+      --accent-green:   #16a34a;
+      --accent-purple:  #7c3aed;
+      --accent-orange:  #ea580c;
+      --mic-bg:         #1a2340;
+      --mic-ring:       rgba(37,99,235,0.25);
+      --wave-color:     rgba(37,99,235,0.35);
+      --logo-color:     #2563eb;
+      --toggle-bg:      #2563eb;
+      --dropdown-bg:    rgba(255,255,255,0.97);
+      --bar-bg:         #ffffff;
+      --shadow-card:    0 4px 24px rgba(37,99,235,0.08), 0 1px 4px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 12px 40px rgba(37,99,235,0.16), 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    [data-theme="dark"] {
+      --bg-page:        #0d111c;
+      --bg-card:        rgba(22,30,50,0.88);
+      --bg-card-hover:  rgba(30,42,70,0.98);
+      --bg-header:      rgba(13,17,28,0.35);
+      --border-card:    rgba(60,80,130,0.4);
+      --text-primary:   #e8edf8;
+      --text-secondary: #8fa0bb;
+      --text-muted:     #5a6a8a;
+      --accent-blue:    #60a5fa;
+      --accent-green:   #4ade80;
+      --accent-purple:  #a78bfa;
+      --accent-orange:  #fb923c;
+      --mic-bg:         #0f1523;
+      --mic-ring:       rgba(96,165,250,0.2);
+      --wave-color:     rgba(96,165,250,0.4);
+      --logo-color:     #60a5fa;
+      --toggle-bg:      #3b82f6;
+      --dropdown-bg:    rgba(22,30,50,0.98);
+      --bar-bg:         rgba(22,30,50,0.7);
+      --shadow-card:    0 4px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 12px 40px rgba(96,165,250,0.15), 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: transparent;
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      transition: color 0.4s ease;
+    }
+    
+    /* ── WebGL Canvas ── */
+    #emerald-horizon {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+    }
+    
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ─── Sidebar ───────────────────────────────────── */
+    .sidebar {
+      width: 320px;
+      background: transparent;
+      border-right: 1px solid var(--border-card);
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      gap: 32px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--text-primary); }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+
+    .logo-waves {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 24px;
+    }
+    .logo-waves span {
+      display: block;
+      width: 3px;
+      background: var(--accent-blue);
+      border-radius: 2px;
+      animation: logoPulse 1.4s ease-in-out infinite;
+      transition: background 0.4s ease;
+    }
+    .logo-waves span:nth-child(1) { height: 8px;  animation-delay: 0s; }
+    .logo-waves span:nth-child(2) { height: 16px; animation-delay: 0.15s; }
+    .logo-waves span:nth-child(3) { height: 22px; animation-delay: 0.3s; }
+    .logo-waves span:nth-child(4) { height: 16px; animation-delay: 0.45s; }
+    .logo-waves span:nth-child(5) { height: 8px;  animation-delay: 0.6s; }
+    @keyframes logoPulse {
+      0%, 100% { transform: scaleY(1); opacity: 0.7; }
+      50%       { transform: scaleY(1.5); opacity: 1; }
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+    }
+
+    /* Workflow Progress */
+    .workflow-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+    }
+    .workflow-steps::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      height: 1px;
+      background: var(--border-card);
+      z-index: 0;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg-page);
+      border: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .step.active .step-circle {
+      background: rgba(37, 99, 235, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+    
+    .step.completed .step-circle {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+    }
+
+    .step-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .step.active .step-label { color: var(--text-primary); }
+
+    /* Profile Grid */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .profile-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .profile-item-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .profile-item-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Theme Toggle Switch */
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-card);
+    }
+    
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .theme-toggle span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(37,99,235,0.2);
+      transition: .4s;
+      border-radius: 24px;
+      border: 1px solid rgba(37,99,235,0.3);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: var(--toggle-bg);
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--toggle-bg); }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+      background-color: white;
+    }
+
+    /* ─── Main Content ──────────────────────────────── */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: transparent;
+    }
+
+    /* Top Nav */
+    .top-nav {
+      height: 70px;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      padding: 0 40px;
+      gap: 32px;
+    }
+
+    .tab {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 8px 32px;
+      border-radius: 50px;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: var(--text-primary); }
+    .tab.active {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    /* Chat Area */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-height: 0;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      padding: 32px max(40px, calc(50% - 600px)) 0;
+    }
+
+    .chat-header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .chat-header-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-header-text strong { font-size: 15px; }
+    .chat-header-text span { font-size: 12px; color: var(--text-secondary); }
+
+    .eligibility-btn {
+      background: transparent;
+      border: 1px solid var(--border-card);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .eligibility-btn:hover { background: rgba(37,99,235,0.05); }
+
+    /* ─── Eligibility Modal ─── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .eligibility-modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 440px;
+      padding: 32px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.15);
+      transform: translateY(20px) scale(0.95);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-align: center;
+      position: relative;
+    }
+    .modal-overlay.active .eligibility-modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .modal-icon-wrap {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(37,99,235,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    .modal-icon-wrap svg {
+      color: var(--accent-blue);
+      width: 28px;
+      height: 28px;
+    }
+    .spinner-ring {
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid rgba(37,99,235,0.2);
+      border-top-color: var(--accent-blue);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .modal-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 24px;
+      min-height: 42px; /* Prevent layout shift */
+    }
+
+    .modal-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+      margin-bottom: 28px;
+    }
+    .modal-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      opacity: 0.4;
+      transition: all 0.3s;
+    }
+    .modal-step.active {
+      opacity: 1;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .modal-step.done {
+      opacity: 1;
+      color: var(--accent-blue);
+    }
+    .modal-step-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-step.done .modal-step-icon {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue);
+    }
+
+    .modal-success-box {
+      background: rgba(22, 163, 74, 0.1);
+      border: 1px solid rgba(22, 163, 74, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: none;
+      transform: translateY(10px);
+      opacity: 0;
+      transition: all 0.4s ease;
+    }
+    .modal-success-box.show {
+      display: block;
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .success-amount {
+      font-size: 28px;
+      font-weight: 700;
+      color: #16a34a;
+      margin-top: 4px;
+    }
+
+    .modal-close-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent-blue);
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+      transition: background 0.2s;
+    }
+    .modal-close-btn.show { display: block; }
+    .modal-close-btn:hover { background: #1d4ed8; }
+
+    /* ─── Language Selector ─── */
+    .lang-selector { position: relative; margin-right: 12px; }
+
+    .lang-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 50px;
+      border: 1px solid var(--border-card);
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .lang-btn:hover { border-color: var(--accent-blue); }
+    .lang-btn svg { color: var(--accent-blue); flex-shrink: 0; }
+    .lang-chevron { width: 14px; height: 14px; transition: transform 0.25s ease; flex-shrink: 0; }
+    .lang-selector.open .lang-chevron { transform: rotate(180deg); }
+
+    .lang-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 170px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-8px) scale(0.96);
+      pointer-events: none;
+      transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 200;
+    }
+    .lang-selector.open .lang-dropdown {
+      opacity: 1; transform: translateY(0) scale(1); pointer-events: all;
+    }
+
+    .lang-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .lang-option:hover { background: rgba(37,99,235,0.08); }
+    .lang-option.active { background: rgba(37,99,235,0.12); font-weight: 600; }
+    .flag { font-size: 14px; }
+
+    /* Messages */
+    .messages-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
+      padding: 0 max(40px, calc(50% - 600px)) 24px;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, black 24px, black calc(100% - 12px), transparent);
+      mask-image: linear-gradient(to bottom, transparent, black 24px, black calc(100% - 12px), transparent);
+    }
+
+    .message {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border-card);
+      padding: 20px 24px;
+      border-radius: 12px 12px 12px 4px;
+      max-width: 600px;
+    }
+
+    .message p {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--accent-blue);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* Input Area */
+    .input-area {
+      margin-top: 24px;
+      margin-bottom: 32px;
+      position: relative;
+      padding: 0 max(40px, calc(50% - 600px));
+    }
+
+    .chat-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-card);
+      color: var(--text-primary);
+      padding: 18px 24px;
+      padding-right: 100px;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .chat-input:focus { border-color: var(--accent-blue); box-shadow: var(--shadow-card-hover); }
+    .chat-input::placeholder { color: var(--text-secondary); }
+    .chat-input.listening::placeholder { color: var(--accent-blue); font-weight: 500; }
+
+    /* ─── View Container System ─── */
+    .view-content {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      height: 100%;
+      min-height: 0;
+      animation: fadeInView 0.3s ease;
+      overflow-y: auto;
+      padding: 0 max(40px, calc(50% - 600px)) 32px;
+    }
+    #view-chat {
+      overflow: hidden;
+      padding: 0;
+    }
+    .view-content.active { display: flex; }
+    
+    @keyframes fadeInView {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── View 2: Options UI ─── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 24px;
+    }
+    .option-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .option-card:hover {
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-4px);
+    }
+    .option-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .option-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+    .option-badge { background: rgba(37,99,235,0.1); color: var(--accent-blue); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+    .option-details { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--text-secondary); }
+    .option-details strong { color: var(--text-primary); font-size: 24px; }
+    .option-btn { margin-top: auto; padding: 12px; border-radius: 10px; background: rgba(37,99,235,0.1); color: var(--accent-blue); font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; }
+    .option-btn:hover { background: var(--accent-blue); color: white; }
+
+    /* ─── View 3: Documents UI ─── */
+    .docs-container { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .doc-upload-zone {
+      border: 2px dashed var(--border-card);
+      border-radius: 16px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.02);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .doc-upload-zone:hover { border-color: var(--accent-blue); background: rgba(37,99,235,0.02); }
+    .doc-upload-zone svg { color: var(--text-secondary); width: 32px; height: 32px; }
+    .doc-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .doc-sub { font-size: 13px; color: var(--text-secondary); }
+
+    /* ─── View 4: Evidence UI ─── */
+    .evidence-container { margin-top: 24px; display: flex; flex-direction: column; gap: 24px; align-items: center; }
+    .video-kyc-box {
+      width: 100%; max-width: 400px;
+      aspect-ratio: 4/3;
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .video-kyc-box.scanning::after {
+      content: '';
+      position: absolute; left: 0; right: 0; top: 0; height: 4px;
+      background: var(--accent-blue);
+      box-shadow: 0 4px 12px var(--accent-blue);
+      animation: scan 2s linear infinite;
+    }
+    @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+
+    /* ─── View 5: Audit UI ─── */
+    .audit-timeline { margin-top: 24px; display: flex; flex-direction: column; gap: 24px; position: relative; padding-left: 20px; border-left: 2px solid var(--border-card); }
+    .audit-item { position: relative; }
+    .audit-dot { position: absolute; left: -27px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-blue); border: 2px solid var(--bg-card); }
+    .audit-content { background: var(--bg-card); border: 1px solid var(--border-card); padding: 16px; border-radius: 12px; font-size: 14px; color: var(--text-secondary); }
+    .audit-content strong { color: var(--text-primary); display: block; margin-bottom: 4px; font-size: 15px; }
+
+    .mic-btn-chat {
+      position: absolute;
+      right: calc(56px + max(40px, calc(50% - 600px)));
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mic-btn-chat:hover, .mic-btn-chat.active {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--accent-blue);
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .send-btn {
+      position: absolute;
+      right: calc(12px + max(40px, calc(50% - 600px)));
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      background: var(--accent-blue);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .send-btn:hover { background: #1d4ed8; }
+
+    /* Thinking Animation */
+    .thinking-message {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border-card);
+      padding: 16px 20px;
+      border-radius: 12px 12px 12px 4px;
+      max-width: 80px;
+      margin-top: 16px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+    .think-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--text-secondary);
+      border-radius: 50%;
+      animation: thinkBounce 1.4s infinite ease-in-out both;
+    }
+    .think-dot:nth-child(1) { animation-delay: -0.32s; }
+    .think-dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes thinkBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+    
+    /* Sleek Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(143, 160, 187, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(143, 160, 187, 0.5);
+    }
+  </style>
+  <script src="assets/config.js"></script>
+  <script src="assets/api-client.js"></script>
+</head>
+<body class="light">
+  <canvas id="emerald-horizon" aria-hidden="true"></canvas>
+  <div class="page-wrapper">
+  
+    <!-- Sidebar -->
+    <aside class="sidebar">
+    <div class="sidebar-header">
+      <button class="back-btn" onclick="localStorage.removeItem('ib_conversation_id'); localStorage.removeItem('ib_user_id'); localStorage.removeItem('ib_application_id'); window.location.href='index.html'" aria-label="Go back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <div class="logo-wrap">
+        <div class="logo-waves" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        Invisible Banker
+      </div>
+    </div>
+
+    <!-- Workflow Progress -->
+    <div class="sidebar-section">
+      <div class="section-title">Workflow Progress</div>
+      <div class="sidebar-card">
+        <div class="workflow-steps">
+          <div class="step active" data-view="view-chat" style="cursor: pointer;">
+            <div class="step-circle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <span class="step-label">Chat</span>
+          </div>
+          <div class="step" data-view="view-options" style="cursor: pointer;">
+            <div class="step-circle">2</div>
+            <span class="step-label">Options</span>
+          </div>
+          <div class="step" data-view="view-evidence" style="cursor: pointer;">
+            <div class="step-circle">3</div>
+            <span class="step-label">Evidence</span>
+          </div>
+          <div class="step" data-view="view-audit" style="cursor: pointer;">
+            <div class="step-circle">4</div>
+            <span class="step-label">Audit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="sidebar-section">
+      <div class="section-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Your Profile
+      </div>
+      <div class="sidebar-card profile-grid">
+        <div class="profile-item">
+          <span class="profile-item-label">State</span>
+          <span class="profile-item-val" id="profileState">--</span>
+        </div>
+        <div class="profile-item">
+          <span class="profile-item-label">Purpose</span>
+          <span class="profile-item-val" id="profilePurpose">--</span>
+        </div>
+        <div class="profile-item" style="grid-column: 1 / -1; margin-top: 8px;">
+          <span class="profile-item-label">Language</span>
+          <span class="profile-item-val" id="profileLang">--</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sidebar Footer (Theme Toggle) -->
+    <div class="sidebar-footer">
+      <div class="theme-toggle">
+        <label class="switch" aria-label="Toggle Dark Mode">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+        <span id="themeLabel">Light Mode</span>
+      </div>
+    </div>
+    
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <!-- Top Nav -->
+    <nav class="top-nav">
+      <a href="#" class="tab active" data-view="view-chat">Chat</a>
+      <a href="#" class="tab" data-view="view-options">Options</a>
+      <a href="#" class="tab" data-view="view-evidence">Evidence</a>
+      <a href="#" class="tab" data-view="view-audit">Audit</a>
+    </nav>
+
+    <!-- Chat Container -->
+    <div class="chat-container">
+      
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="chat-header-title">
+          <div class="logo-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <div class="chat-header-text">
+            <strong>Invisible Banker</strong>
+            <span id="chatHeaderStatus">New conversation</span>
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: center;">
+          <!-- Language Selector -->
+          <div class="lang-selector" id="chatLangSelector">
+            <button class="lang-btn" id="chatLangBtn" aria-haspopup="listbox" aria-expanded="false">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              <span id="chatSelectedLang">English</span>
+              <svg class="lang-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="lang-dropdown" role="listbox">
+              <div class="lang-option active" role="option" data-lang="English">
+                <span class="flag">&#x1F1EC;&#x1F1E7;</span> English
+              </div>
+              <div class="lang-option" role="option" data-lang="हिंदी">
+                <span class="flag">&#x1F1EE;&#x1F1F3;</span> हिंदी
+              </div>
+              <div class="lang-option" role="option" data-lang="বাংলা">
+                <span class="flag">&#x1F1EE;&#x1F1F3;</span> বাংলা
+              </div>
+              <div class="lang-option" role="option" data-lang="Hinglish">
+                <span class="flag">&#x1F1EE;&#x1F1F3;</span> Hinglish
+              </div>
+            </div>
+          </div>
+          
+          <button class="eligibility-btn" id="checkEligibilityBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Check Eligibility
+          </button>
+        </div>
+      </div>
+
+      <!-- View 1: Chat -->
+      <div class="view-content active" id="view-chat">
+        <!-- Messages Area -->
+      <div class="messages-area" id="messages-area"></div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Type a message or question...">
+        <button class="mic-btn-chat" id="chat-mic-btn" aria-label="Use microphone">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+          </svg>
+        </button>
+        <button class="send-btn" id="chat-send-btn" aria-label="Send message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      </div> <!-- End View 1: Chat -->
+
+      <!-- View 2: Options -->
+      <div class="view-content" id="view-options">
+        <h2 style="font-size: 22px; font-weight: 600; color: var(--text-primary);">Pre-Approved Options</h2>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">Based on your profile, you have the following pre-approved business loan options.</p>
+        
+        <div class="options-grid" id="options-grid">
+          <p id="options-empty-state" style="font-size: 14px; color: var(--text-secondary);">
+            Run "Check Eligibility" to see real, backend-evaluated options here.
+          </p>
+        </div>
+      </div>
+
+      <!-- View 4: Evidence -->
+      <div class="view-content" id="view-evidence">
+        <h2 style="font-size: 22px; font-weight: 600; color: var(--text-primary);">Sources & Evidence</h2>
+        <p style="font-size: 14px; color: var(--text-secondary);">Official source documents the assistant retrieved to back its answers and eligibility results.</p>
+
+        <div class="evidence-container" id="evidence-container">
+          <p id="evidence-empty-state" style="font-size: 14px; color: var(--text-secondary);">
+            No evidence retrieved yet. Ask a question or run "Check Eligibility" to pull real source citations here.
+          </p>
+        </div>
+      </div>
+
+      <!-- View 5: Audit -->
+      <div class="view-content" id="view-audit">
+        <h2 style="font-size: 22px; font-weight: 600; color: var(--text-primary);">Audit Trail</h2>
+        <p style="font-size: 14px; color: var(--text-secondary);">Secure log of the entire origination workflow.</p>
+        
+        <div class="audit-timeline" id="audit-timeline">
+          <p id="audit-empty-state" style="font-size: 14px; color: var(--text-secondary);">
+            No audit events yet — this fills in as your application progresses (real events from the backend audit log).
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+  </div>
+
+  <!-- Eligibility Modal -->
+  <div class="modal-overlay" id="eligibilityModal">
+    <div class="eligibility-modal">
+      <div class="modal-icon-wrap" id="modalIcon">
+        <div class="spinner-ring" id="modalSpinner"></div>
+        <svg id="modalInnerIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <h3 class="modal-title" id="modalTitle">Checking Eligibility</h3>
+      <p class="modal-desc" id="modalDesc">Please wait while we securely analyze your profile.</p>
+
+      <div class="modal-steps" id="modalSteps">
+        <div class="modal-step" id="step1">
+          <div class="modal-step-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <span>Analyzing Profile Data</span>
+        </div>
+        <div class="modal-step" id="step2">
+          <div class="modal-step-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <span>Checking Bureau Score</span>
+        </div>
+        <div class="modal-step" id="step3">
+          <div class="modal-step-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <span>Calculating Offers</span>
+        </div>
+      </div>
+
+      <div class="modal-success-box" id="modalSuccessBox">
+        <div style="font-size: 13px; font-weight: 600; color: #16a34a; text-transform: uppercase; letter-spacing: 0.5px;" id="modalSuccessLabel">Result</div>
+        <div class="success-amount" id="modalSuccessAmount"></div>
+        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" id="modalSuccessSub"></div>
+      </div>
+
+      <button class="modal-close-btn" id="modalCloseBtn">View Options</button>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════════
+       THEME INITIALIZATION & TOGGLE
+    ═══════════════════════════════════════════════════════════════════ */
+    const initialTheme = localStorage.getItem('themePreference') || 'light';
+    document.documentElement.setAttribute('data-theme', initialTheme);
+
+    const themeToggle = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+    if (initialTheme === 'light') themeToggle.checked = true;
+
+    function applyTheme(light) {
+      const t = light ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('themePreference', t);
+      themeLabel.textContent = light ? 'Light Mode' : 'Dark Mode';
+      if (window._emeraldSetDark) window._emeraldSetDark(!light);
+    }
+    
+    themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
+    applyTheme(themeToggle.checked);
+
+    // Retrieve any initial query from the previous page
+    let INITIAL_QUERY = null;
+    window.addEventListener('DOMContentLoaded', () => {
+      const initialQuery = localStorage.getItem('invisibleBankerInitialQuery');
+      if (initialQuery) {
+        document.getElementById('chat-input').value = initialQuery;
+        localStorage.removeItem('invisibleBankerInitialQuery');
+        INITIAL_QUERY = initialQuery;
+      }
+      const landingLang = localStorage.getItem('invisibleBankerLandingLang');
+      if (landingLang && LANG_CODES[landingLang]) {
+        currentLang = landingLang;
+        currentLangCode = LANG_CODES[landingLang];
+        langLbl.textContent = landingLang;
+        localStorage.removeItem('invisibleBankerLandingLang');
+      }
+      initSession();
+    });
+
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send-btn');
+    const micBtn = document.getElementById('chat-mic-btn');
+    const messagesArea = document.getElementById('messages-area');
+
+    /* ── Language Dropdown Logic ── */
+    const langSel = document.getElementById('chatLangSelector');
+    const langBtn = document.getElementById('chatLangBtn');
+    const langLbl = document.getElementById('chatSelectedLang');
+    const langOpts = langSel.querySelectorAll('.lang-option');
+
+    // Maps the UI's display labels to backend language codes
+    // (see backend/app/models/schemas.py — ChatRequest.language / detected_language)
+    const LANG_CODES = { 'English': 'en-IN', 'हिंदी': 'hi-IN', 'বাংলা': 'bn-IN', 'Hinglish': 'hi-IN' };
+    let currentLang = 'English';
+    let currentLangCode = LANG_CODES[currentLang];
+
+    langBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      langSel.classList.toggle('open');
+    });
+
+    langOpts.forEach(opt => {
+      opt.addEventListener('click', () => {
+        langOpts.forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+        currentLang = opt.dataset.lang;
+        currentLangCode = LANG_CODES[currentLang] || 'en-IN';
+        langLbl.textContent = currentLang;
+        langSel.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', () => langSel.classList.remove('open'));
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SESSION STATE — real backend identifiers, persisted so
+       conversation_id / user_id / application_id survive a refresh.
+       No dummy/local-only chat state below this point.
+    ═══════════════════════════════════════════════════════════════════ */
+    const Session = {
+      get userId() { return localStorage.getItem('ib_user_id') || null; },
+      set userId(v) { v ? localStorage.setItem('ib_user_id', v) : localStorage.removeItem('ib_user_id'); },
+      get conversationId() { return localStorage.getItem('ib_conversation_id') || null; },
+      set conversationId(v) { v ? localStorage.setItem('ib_conversation_id', v) : localStorage.removeItem('ib_conversation_id'); },
+      get applicationId() { return localStorage.getItem('ib_application_id') || null; },
+      set applicationId(v) { v ? localStorage.setItem('ib_application_id', v) : localStorage.removeItem('ib_application_id'); },
+    };
+
+    let latestEvidence = [];        // last EligibilityResponse.evidence_summary (real backend data)
+    let latestRecommendations = []; // last EligibilityResponse.recommendations (real backend data)
+    let previousTopic = null;
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : String(str);
+      return div.innerHTML;
+    }
+
+    function updateProfileUI(profile) {
+      if (!profile) return;
+      if (profile.state) document.getElementById('profileState').textContent = profile.state;
+      if (profile.loan_purpose) document.getElementById('profilePurpose').textContent = profile.loan_purpose;
+      if (profile.language) document.getElementById('profileLang').textContent = profile.language;
+    }
+
+    function formatMarkdown(text) {
+      let html = escapeHtml(text);
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      html = html.replace(/\n/g, '<br>');
+      return html;
+    }
+
+    function renderMessage(role, content, badgeText) {
+      const msgDiv = document.createElement('div');
+      if (role === 'user') {
+        msgDiv.className = 'message user-message';
+        msgDiv.style.cssText = "align-self: flex-end; background: var(--accent-blue); border: none; max-width: 600px; padding: 16px 20px; border-radius: 12px 12px 4px 12px; color: white; margin-top: 16px;";
+        msgDiv.innerHTML = `<p style="font-size: 15px; line-height: 1.5; color: white; margin-bottom: 0;">${escapeHtml(content)}</p>`;
+      } else if (role === 'error') {
+        msgDiv.className = 'message error-message';
+        msgDiv.style.cssText = "background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.3); padding: 16px 20px; border-radius: 12px 12px 12px 4px; max-width: 600px; margin-top: 16px;";
+        msgDiv.innerHTML = `<p style="font-size: 14px; line-height: 1.5; color: #dc2626; margin: 0;">${escapeHtml(content)}</p>`;
+      } else {
+        msgDiv.className = 'message ai-message';
+        msgDiv.style.cssText = "background: var(--bg-card-hover); border: 1px solid var(--border-card); padding: 20px 24px; border-radius: 12px 12px 12px 4px; max-width: 600px; margin-top: 16px;";
+        msgDiv.innerHTML = `
+          <p style="font-size: 15px; line-height: 1.5; color: var(--text-primary); margin-bottom: 16px;">${formatMarkdown(content)}</p>
+          ${badgeText ? `<div class="badge" style="display: inline-flex; align-items: center; background: rgba(37, 99, 235, 0.15); color: var(--accent-blue); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600;">${escapeHtml(badgeText)}</div>` : ''}
+        `;
+      }
+      messagesArea.appendChild(msgDiv);
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+      return msgDiv;
+    }
+
+    let thinkingDiv = null;
+    function showThinking() {
+      thinkingDiv = document.createElement('div');
+      thinkingDiv.className = 'message thinking-message';
+      thinkingDiv.innerHTML = `<div class="think-dot"></div><div class="think-dot"></div><div class="think-dot"></div>`;
+      messagesArea.appendChild(thinkingDiv);
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+    function hideThinking() {
+      if (thinkingDiv) {
+        thinkingDiv.remove();
+        thinkingDiv = null;
+      }
+    }
+
+    async function initSession() {
+      const convId = Session.conversationId;
+      if (convId) {
+        try {
+          const data = await InvisibleBankerAPI.getConversationMessages(convId);
+          (data.messages || []).forEach(m => {
+            renderMessage(m.role === 'user' ? 'user' : 'ai', m.content, m.role === 'assistant' ? 'AI Interpretation' : null);
+          });
+          if (data.language) {
+            const label = Object.keys(LANG_CODES).find(k => LANG_CODES[k] === data.language) || 'English';
+            currentLang = label; currentLangCode = data.language;
+            langLbl.textContent = label;
+          }
+        } catch (err) {
+          renderMessage('error', `Couldn't load your previous conversation: ${err.message}`);
+        }
+      }
+
+      if (Session.applicationId) {
+        try {
+          const app = await InvisibleBankerAPI.getApplication(Session.applicationId);
+          if (app && app.profile) {
+            updateProfileUI(app.profile);
+          }
+        } catch (e) {
+          console.warn('Could not fetch application state for profile', e);
+        }
+      }
+
+      // If we arrived from the landing page with a typed query, send it now
+      if (INITIAL_QUERY) {
+        chatInput.value = INITIAL_QUERY;
+        await sendMessage();
+      }
+    }
+
+    async function sendMessage() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      renderMessage('user', text);
+      chatInput.value = '';
+      sendBtn.disabled = true;
+
+      showThinking();
+
+      try {
+        const res = await InvisibleBankerAPI.sendChatMessage({
+          message: text,
+          user_id: Session.userId,
+          conversation_id: Session.conversationId,
+          application_id: Session.applicationId,
+          language: currentLangCode,
+        });
+
+        // Persist identifiers returned by the backend — required for
+        // conversation_id/user_id/application_id to survive a refresh.
+        if (res.user_id) Session.userId = res.user_id;
+        if (res.conversation_id) Session.conversationId = res.conversation_id;
+        if (res.application_id) Session.applicationId = res.application_id;
+
+        if (res.profile) updateProfileUI(res.profile);
+
+        if (res.intent) {
+          const currentTopic = res.intent.topic || 'unknown';
+          if (previousTopic !== null && currentTopic !== 'unknown' && currentTopic !== previousTopic) {
+            console.log(`Topic switch detected: ${previousTopic} -> ${currentTopic}. Clearing options and evidence.`);
+            latestRecommendations = [];
+            latestEvidence = [];
+            renderOptions();
+            renderEvidence();
+          }
+          if (currentTopic !== 'unknown') {
+            previousTopic = currentTopic;
+          }
+        }
+
+        hideThinking();
+        renderMessage('ai', res.reply, 'AI Interpretation');
+
+        const headerStatus = document.getElementById('chatHeaderStatus');
+        if (headerStatus && res.workflow_state) headerStatus.textContent = res.workflow_state.replaceAll('_', ' ');
+      } catch (err) {
+        hideThinking();
+        renderMessage('error', err instanceof InvisibleBankerAPI.ApiError
+          ? `Backend error: ${err.message}`
+          : `Couldn't reach the backend: ${err.message}`);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    // ── Voice input: real Sarvam STT via the backend. No mock transcript. ──
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    micBtn.addEventListener('click', async () => {
+      if (micBtn.classList.contains('active')) {
+        mediaRecorder?.stop();
+        return;
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        renderMessage('error', 'Voice input is not supported in this browser. Please type your message.');
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(t => t.stop());
+          micBtn.classList.remove('active');
+          chatInput.classList.remove('listening');
+
+          const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+          chatInput.placeholder = 'Transcribing...';
+          try {
+            const result = await InvisibleBankerAPI.transcribeAudio(blob);
+            if (result.success) {
+              chatInput.value = result.transcript;
+              if (result.confirmation_required) {
+                renderMessage('ai', result.confirmation_message, 'Needs Confirmation');
+              }
+            } else {
+              renderMessage('error', result.fallback_message || result.error || 'Voice recognition failed.');
+            }
+          } catch (err) {
+            renderMessage('error', `Voice transcription failed: ${err.message}. Please type your message instead.`);
+          } finally {
+            chatInput.placeholder = 'Type a message or question...';
+          }
+        };
+        mediaRecorder.start();
+        micBtn.classList.add('active');
+        chatInput.placeholder = 'Listening...';
+        chatInput.classList.add('listening');
+        chatInput.value = '';
+      } catch (err) {
+        renderMessage('error', `Microphone access denied or unavailable: ${err.message}`);
+      }
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // ── Eligibility Modal Logic — real backend call, real result ──
+    const checkEligibilityBtn = document.getElementById('checkEligibilityBtn');
+    const eligibilityModal = document.getElementById('eligibilityModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalSpinner = document.getElementById('modalSpinner');
+    const modalInnerIcon = document.getElementById('modalInnerIcon');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalStepsBlock = document.getElementById('modalSteps');
+    const modalSuccessBox = document.getElementById('modalSuccessBox');
+    const modalSuccessLabel = document.getElementById('modalSuccessLabel');
+    const modalSuccessAmount = document.getElementById('modalSuccessAmount');
+    const modalSuccessSub = document.getElementById('modalSuccessSub');
+
+    function setModalStep(n, state) {
+      const el = document.getElementById(`step${n}`);
+      if (el) el.className = `modal-step ${state}`;
+    }
+
+    function showModalError(message) {
+      modalSpinner.style.display = 'none';
+      modalInnerIcon.innerHTML = `<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>`;
+      modalInnerIcon.style.color = "#dc2626";
+      document.getElementById('modalIcon').style.background = "rgba(220,38,38,0.1)";
+      modalTitle.textContent = "Couldn't Check Eligibility";
+      modalDesc.textContent = message;
+      modalStepsBlock.style.display = 'none';
+      modalCloseBtn.classList.add('show');
+      modalCloseBtn.textContent = 'Close';
+    }
+
+    checkEligibilityBtn.addEventListener('click', async () => {
+      if (!Session.userId || !Session.applicationId) {
+        renderMessage('error', 'Start a conversation first — eligibility needs a profile built from chat.');
+        return;
+      }
+
+      eligibilityModal.classList.add('active');
+      modalSpinner.style.display = 'block';
+      modalInnerIcon.innerHTML = `<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>`;
+      modalInnerIcon.style.color = "var(--accent-blue)";
+      document.getElementById('modalIcon').style.background = "rgba(37,99,235,0.1)";
+      modalTitle.textContent = "Checking Eligibility";
+      modalDesc.textContent = "Running the real eligibility check against your profile.";
+      modalStepsBlock.style.display = 'flex';
+      modalSuccessBox.classList.remove('show');
+      modalCloseBtn.classList.remove('show');
+      modalCloseBtn.textContent = 'View Options';
+      setModalStep(1, 'active'); setModalStep(2, ''); setModalStep(3, '');
+
+      try {
+        setModalStep(1, 'done'); setModalStep(2, 'active');
+        const data = await InvisibleBankerAPI.checkEligibility(Session.userId, Session.applicationId);
+        setModalStep(2, 'done'); setModalStep(3, 'active');
+
+        latestRecommendations = data.recommendations || [];
+        latestEvidence = data.evidence_summary || [];
+        setModalStep(3, 'done');
+
+        modalSpinner.style.display = 'none';
+        const eligibleCount = latestRecommendations.filter(r => r.eligibility.status === 'ELIGIBLE').length;
+
+        if (eligibleCount > 0) {
+          modalInnerIcon.innerHTML = `<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>`;
+          modalInnerIcon.style.color = "#16a34a";
+          document.getElementById('modalIcon').style.background = "rgba(22, 163, 74, 0.1)";
+          modalTitle.textContent = "Eligibility Check Complete";
+          modalDesc.textContent = `${eligibleCount} of ${latestRecommendations.length} products you may be eligible for.`;
+        } else {
+          modalInnerIcon.innerHTML = `<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>`;
+          modalInnerIcon.style.color = "#dc2626";
+          document.getElementById('modalIcon').style.background = "rgba(220,38,38,0.1)";
+          modalTitle.textContent = "No Eligible Products Found";
+          modalDesc.textContent = latestRecommendations.length
+            ? "None of the evaluated products currently match your profile."
+            : "No active products were returned by the eligibility engine.";
+        }
+
+        const top = latestRecommendations[0];
+        if (top) {
+          modalSuccessLabel.textContent = top.product_name;
+          modalSuccessAmount.textContent = top.eligibility.status;
+          modalSuccessSub.textContent = top.rank_reason;
+          modalSuccessBox.classList.add('show');
+        }
+
+        modalStepsBlock.style.display = 'none';
+        modalCloseBtn.classList.add('show');
+        renderOptions();
+        renderEvidence();
+      } catch (err) {
+        showModalError(err.message);
+      }
+    });
+
+    modalCloseBtn.addEventListener('click', () => {
+      eligibilityModal.classList.remove('active');
+      switchView('view-options');
+    });
+
+    function renderOptions() {
+      const grid = document.getElementById('options-grid');
+      grid.innerHTML = '';
+      if (!latestRecommendations.length) {
+        grid.innerHTML = '<p style="font-size: 14px; color: var(--text-secondary);">No recommendations returned by the backend.</p>';
+        return;
+      }
+      latestRecommendations.forEach(rec => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        const statusColor = rec.eligibility.status === 'ELIGIBLE' ? '#16a34a'
+          : rec.eligibility.status === 'NEEDS_REVIEW' ? '#d97706' : '#dc2626';
+        card.innerHTML = `
+          <div class="option-header">
+            <span class="option-title">${escapeHtml(rec.product_name)}</span>
+            <span class="option-badge" style="background: ${statusColor}22; color: ${statusColor};">${escapeHtml(rec.eligibility.status)}</span>
+          </div>
+          <div class="option-details">
+            <span>${escapeHtml(rec.product_type || '')}</span>
+            <strong style="font-size: 13px; font-weight: 500;">${escapeHtml(rec.rank_reason || '')}</strong>
+            ${rec.explanation ? `<span style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">${escapeHtml(rec.explanation)}</span>` : ''}
+            ${rec.source_metadata && rec.source_metadata.source_url ? `<span style="margin-top: 4px;"><a href="${escapeHtml(rec.source_metadata.source_url)}" target="_blank" rel="noopener" style="color: var(--accent-blue);">${escapeHtml(rec.source_metadata.authority || 'Source')}</a></span>` : ''}
+            <span>Documents ready: ${rec.document_readiness.present}/${rec.document_readiness.total}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderEvidence() {
+      const container = document.getElementById('evidence-container');
+      container.innerHTML = '';
+      if (!latestEvidence.length) {
+        container.innerHTML = '<p style="font-size: 14px; color: var(--text-secondary);">No evidence retrieved yet. Ask a question or run "Check Eligibility" to pull real source citations here.</p>';
+        return;
+      }
+      latestEvidence.forEach(ev => {
+        const item = document.createElement('div');
+        item.style.cssText = "background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 8px; padding: 16px; margin-bottom: 12px;";
+        item.innerHTML = `
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">${escapeHtml(ev.title)}</div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+            ${escapeHtml(ev.authority)}${ev.page_number ? ', Page ' + escapeHtml(ev.page_number) : ''}${ev.last_checked ? ' · Last checked ' + escapeHtml(ev.last_checked) : ''}
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${escapeHtml(ev.content_preview)}</p>
+          ${ev.source_url ? `<a href="${escapeHtml(ev.source_url)}" target="_blank" rel="noopener" style="font-size: 12px; color: var(--accent-blue);">View source →</a>` : ''}
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    async function renderAudit() {
+      const container = document.getElementById('audit-timeline');
+      if (!Session.applicationId) {
+        container.innerHTML = '<p style="font-size: 14px; color: var(--text-secondary);">No application yet — start chatting first.</p>';
+        return;
+      }
+      try {
+        const app = await InvisibleBankerAPI.getApplication(Session.applicationId);
+        const events = app.audit_events || [];
+        if (!events.length) {
+          container.innerHTML = '<p style="font-size: 14px; color: var(--text-secondary);">No audit events recorded yet.</p>';
+          return;
+        }
+        container.innerHTML = '';
+        events.forEach(ev => {
+          const item = document.createElement('div');
+          item.className = 'audit-item';
+          item.innerHTML = `
+            <div class="audit-dot"></div>
+            <div class="audit-content">
+              <strong>${escapeHtml(ev.type)}</strong>
+              ${Object.entries(ev.data || {}).map(([k, v]) => `${escapeHtml(k)}: ${escapeHtml(JSON.stringify(v))}`).join('<br>')}
+              <em>Timestamp: ${escapeHtml(ev.timestamp)}</em>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      } catch (err) {
+        container.innerHTML = `<p style="font-size: 14px; color: #dc2626;">Couldn't load audit trail: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    async function renderDocs(rec) {
+      const container = document.getElementById('docs-container');
+      container.innerHTML = '';
+      const required = (rec && rec.document_readiness && rec.document_readiness.required) || [];
+      if (!required.length) {
+        container.innerHTML = '<p style="font-size: 14px; color: var(--text-secondary);">No document requirements returned for this product.</p>';
+        return;
+      }
+      required.forEach(doc => {
+        const zone = document.createElement('div');
+        zone.className = 'doc-upload-zone';
+        zone.style.cursor = 'pointer';
+        zone.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+          <div style="text-align: center;">
+            <div class="doc-title">${escapeHtml(doc.label)}</div>
+            <div class="doc-sub" data-status>${doc.present ? 'Already on file' : 'Click to upload'}</div>
+          </div>
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+        `;
+        const input = zone.querySelector('input[type=file]');
+        const status = zone.querySelector('[data-status]');
+        zone.addEventListener('click', () => input.click());
+        input.addEventListener('change', async () => {
+          if (!input.files[0]) return;
+          status.textContent = 'Uploading...';
+          try {
+            const result = await InvisibleBankerAPI.uploadDocument(input.files[0], Session.userId, Session.applicationId);
+            status.textContent = result.status ? `Status: ${result.status}` : 'Uploaded';
+          } catch (err) {
+            status.textContent = `Upload failed: ${err.message}`;
+          }
+        });
+        container.appendChild(zone);
+      });
+    }
+
+    // ── View Navigation Logic ──
+    const allTabs = document.querySelectorAll('.top-nav .tab');
+    const allSteps = document.querySelectorAll('.workflow-steps .step');
+    const allViews = document.querySelectorAll('.view-content');
+
+    function switchView(viewId) {
+      allViews.forEach(v => v.classList.remove('active'));
+      const targetView = document.getElementById(viewId);
+      if (targetView) targetView.classList.add('active');
+
+      allTabs.forEach(t => {
+        if (t.dataset.view === viewId) t.classList.add('active');
+        else t.classList.remove('active');
+      });
+
+      allSteps.forEach(s => {
+        if (s.dataset.view === viewId) s.classList.add('active');
+        else s.classList.remove('active');
+      });
+
+      if (viewId === 'view-audit') renderAudit();
+      if (viewId === 'view-evidence') renderEvidence();
+    }
+
+    allTabs.forEach(t => {
+      t.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchView(t.dataset.view);
+      });
+    });
+
+    allSteps.forEach(s => {
+      s.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchView(s.dataset.view);
+      });
+    });
+
+    // ── Select Option Logic — real backend call, real document checklist ──
+    async function selectLoanOption(btn, rec) {
+      document.querySelectorAll('.option-btn').forEach(b => {
+        b.innerHTML = "Select Option";
+        b.style.background = "rgba(37,99,235,0.1)";
+        b.style.color = "var(--accent-blue)";
+        b.disabled = false;
+      });
+
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg> Selected`;
+      btn.style.background = "var(--accent-blue)";
+      btn.style.color = "white";
+      btn.disabled = true;
+
+      try {
+        await InvisibleBankerAPI.selectProduct(Session.applicationId, rec.product_id);
+        renderDocs(rec);
+        setTimeout(() => switchView('view-docs'), 500);
+      } catch (err) {
+        renderMessage('error', `Couldn't select this product: ${err.message}`);
+        btn.disabled = false;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       EMERALD HORIZON BACKGROUND  –  WebGL GLSL shader
+       Teal/cyan radial glow arc rising from the bottom of the viewport.
+    ═══════════════════════════════════════════════════════════════════ */
+    (function initEmeraldHorizon() {
+      const canvas = document.getElementById('emerald-horizon');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return;
+
+      /* ── Vertex shader ── */
+      const VS = `
+        attribute vec2 a_position;
+        void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
+      `;
+
+      /* ────────────────────────────────────────────────────────────────
+         LUMINA fragment shader  (emerald-horizon variant)
+         Identical props surface: speed, waveScale, variation, glow, vignette, hue
+         Extra uniform: u_dark (0=light, 1=dark)
+      ──────────────────────────────────────────────────────────────── */
+      const FS = `
+        precision highp float;
+        uniform float u_time;
+        uniform vec2  u_resolution;
+        uniform float u_wave_scale;
+        uniform float u_variation;
+        uniform float u_glow;
+        uniform float u_vignette;
+        uniform float u_dark;   /* 0 = light mode, 1 = dark mode */
+
+        /* ── Value noise ── */
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+        float vnoise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(hash(i),             hash(i + vec2(1,0)), u.x),
+            mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), u.x),
+            u.y
+          );
+        }
+        /* 5-octave fBm */
+        float fbm(vec2 p) {
+          float v = 0.0, a = 0.5;
+          for (int i = 0; i < 5; i++) {
+            v += a * vnoise(p);
+            p  = p * 2.1 + vec2(1.3, 1.7);
+            a *= 0.5;
+          }
+          return v;
+        }
+
+        void main() {
+          /* uv: (0,0)=bottom-left  (1,1)=top-right */
+          vec2 uv = gl_FragCoord.xy / u_resolution;
+
+          float t = u_time * 0.30;
+
+          /* ─── WAVE DISTORTION ─── */
+          float wf = 2.6 * u_wave_scale;
+          float wave =
+              0.16 * sin(uv.x * wf        + t * 1.05) +
+              0.08 * sin(uv.x * wf * 2.4  - t * 0.65 + 1.3) +
+              0.04 * sin(uv.x * wf * 5.1  + t * 1.2  + 2.4);
+          float n = fbm(vec2(uv.x * 2.2 * u_variation + t * 0.18, t * 0.12));
+          wave += (n - 0.5) * 0.09 * u_variation;
+
+          /* ─── ARC HORIZON (sphere-rim from bottom-right) ───
+             Sphere centre is at (0.72, -0.52) in uv-space — off-screen below-right.
+             We see the top-left rim as the glowing arc.
+          */
+          vec2  sph  = vec2(0.72, -0.50);
+          float r    = 0.80;
+          float dSph = length(uv - sph) - r;   /* signed distance to rim */
+          dSph += wave * 0.22;
+
+          /* ─── GLOW INTENSITY ─── */
+          float gw   = 0.30 * u_glow;
+          float glow = exp(-(dSph * dSph) / (gw * gw));          /* soft halo */
+          float cw   = 0.022 * u_glow;
+          float core = exp(-(dSph * dSph) / (cw * cw)) * 1.8;   /* bright core */
+          float I    = clamp(glow * 0.85 + core, 0.0, 1.6);
+
+          /* ─── COLOUR PALETTE ─── */
+          vec3 teal   = vec3(0.00, 0.76, 0.58);   /* deep teal  */
+          vec3 bright = vec3(0.00, 0.93, 0.78);   /* vivid teal */
+          vec3 cyan   = vec3(0.10, 0.88, 0.96);   /* aqua-cyan  */
+          vec3 sky    = vec3(0.30, 0.78, 1.00);   /* light blue */
+
+          /* Colour varies left → right along the arc */
+          float cx    = clamp(uv.x * 1.4, 0.0, 1.0);
+          vec3  arcCol = mix(mix(teal, bright, cx), mix(cyan, sky, cx), cx * 0.75);
+
+          /* ─── PAGE BACKGROUND (opaque, adapts to theme) ─── */
+          vec3 bgDark  = vec3(0.024, 0.031, 0.063);
+          vec3 bgLight = vec3(1.000, 1.000, 1.000);
+          vec3 bg      = mix(bgLight, bgDark, u_dark);
+
+          /* Subtle top-to-bottom tint on the background */
+          float topTint = u_dark > 0.5
+            ? mix(0.0, 0.05, 1.0 - uv.y)           /* dark: faint blue bloom top */
+            : 0.0;                                 /* light: keep pure white */
+          bg += topTint * vec3(0.05, 0.12, 0.35);
+
+          /* Glow visible in both modes, properly scaled so the emerald effect shows on white */
+          float glowMix = clamp(I * mix(0.70, 1.0, u_dark), 0.0, 1.0);
+          vec3  finalCol = mix(bg, arcCol, glowMix);
+
+          /* ─── VIGNETTE ─── */
+          vec2  vUv = uv * 2.0 - 1.0;
+          float vig = 1.0 - dot(vUv * vec2(0.9, 1.1), vUv * vec2(0.9, 1.1)) * 0.28 * u_vignette;
+          /* In light mode, soften the vignette so the background stays mostly white */
+          vig = mix(mix(1.0, vig, 0.15), vig, u_dark);
+          finalCol *= clamp(vig, 0.18, 1.0);
+
+          gl_FragColor = vec4(finalCol, 1.0); /* always opaque */
+        }
+      `;
+
+      /* ── Shader compile helper ── */
+      function compile(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          console.error('[Emerald] Shader error:', gl.getShaderInfoLog(s));
+          gl.deleteShader(s);
+          return null;
+        }
+        return s;
+      }
+
+      const vert = compile(gl.VERTEX_SHADER,   VS);
+      const frag = compile(gl.FRAGMENT_SHADER, FS);
+      if (!vert || !frag) return;
+
+      const prog = gl.createProgram();
+      gl.attachShader(prog, vert);
+      gl.attachShader(prog, frag);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        console.error('[Emerald] Link error:', gl.getProgramInfoLog(prog));
+        return;
+      }
+      gl.useProgram(prog);
+
+      /* ── Full-screen quad geometry ── */
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER,
+        new Float32Array([-1,-1, 1,-1, -1,1, 1,-1, 1,1, -1,1]),
+        gl.STATIC_DRAW);
+      const aPos = gl.getAttribLocation(prog, 'a_position');
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+      /* ── Uniform handles ── */
+      const uTime    = gl.getUniformLocation(prog, 'u_time');
+      const uRes     = gl.getUniformLocation(prog, 'u_resolution');
+      const uWave    = gl.getUniformLocation(prog, 'u_wave_scale');
+      const uVariant = gl.getUniformLocation(prog, 'u_variation');
+      const uGlow    = gl.getUniformLocation(prog, 'u_glow');
+      const uVig     = gl.getUniformLocation(prog, 'u_vignette');
+      const uDark    = gl.getUniformLocation(prog, 'u_dark');
+
+      /* Expose setter so theme toggle can call it */
+      window._emeraldSetDark = function(dark) {
+        gl.useProgram(prog);
+        gl.uniform1f(uDark, dark ? 1.0 : 0.0);
+      };
+
+      /* No alpha blending – shader is fully opaque */
+      gl.disable(gl.BLEND);
+      gl.clearColor(0.024, 0.031, 0.063, 1);
+
+      /* ── Resize ── */
+      function resize() {
+        const dpr = Math.min(devicePixelRatio, 2);
+        const w   = (window.innerWidth  * dpr) | 0;
+        const h   = (window.innerHeight * dpr) | 0;
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w;
+          canvas.height = h;
+          canvas.style.width  = window.innerWidth  + 'px';
+          canvas.style.height = window.innerHeight + 'px';
+        }
+        gl.viewport(0, 0, w, h);
+        gl.uniform2f(uRes, w, h);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      /* Initialise uniforms */
+      const isDarkInit = document.documentElement.dataset.theme === 'dark';
+      gl.uniform1f(uDark,    isDarkInit ? 1.0 : 0.0);
+      gl.uniform1f(uWave,    1.0);
+      gl.uniform1f(uVariant, 1.0);
+      gl.uniform1f(uGlow,    1.38);  /* matches props panel default */
+      gl.uniform1f(uVig,     1.0);
+
+      /* ── Render loop ── */
+      const start = performance.now();
+      let   paused = false;
+      document.addEventListener('visibilitychange', () => { paused = document.hidden; });
+
+      (function tick() {
+        requestAnimationFrame(tick);
+        if (paused) return;
+        resize();
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform1f(uTime, (performance.now() - start) * 0.001);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      })();
+    })();
+  </script>
+</body>
+</html>
